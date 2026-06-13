@@ -18,3 +18,20 @@ def test_chunk_documents_preserves_metadata():
 
 def test_chunk_documents_empty_input():
     assert chunk_documents([]) == []
+
+
+from src.ingestion.loader import load_knowledge_base
+
+
+def test_load_knowledge_base_loads_markdown(tmp_path):
+    md_file = tmp_path / "intro.md"
+    md_file.write_text("# System Design\nLoad balancing distributes traffic.", encoding="utf-8")
+    docs = load_knowledge_base(str(tmp_path))
+    assert len(docs) == 1
+    assert "load balancing" in docs[0].page_content.lower()
+    assert docs[0].metadata["source"].endswith("intro.md")
+
+
+def test_load_knowledge_base_empty_dir(tmp_path):
+    docs = load_knowledge_base(str(tmp_path))
+    assert docs == []
