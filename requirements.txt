@@ -3,7 +3,7 @@ langchain-community==0.3.24
 langchain-chroma==0.2.4
 langchain-huggingface==0.1.2
 langchain-openai==0.3.35
-openai==1.86.0
+openai==2.41.1
 chromadb==1.0.9
 sentence-transformers==3.4.1
 streamlit==1.45.1
