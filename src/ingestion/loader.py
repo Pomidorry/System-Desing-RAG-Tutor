@@ -27,16 +27,24 @@ def load_knowledge_base(directory: str) -> list[Document]:
     return docs
 
 
+_BATCH_SIZE = 500
+
+
 def ingest(knowledge_base_dir: str, vector_store) -> int:
     docs = load_knowledge_base(knowledge_base_dir)
     if not docs:
         return 0
     chunks = chunk_documents(docs)
-    vector_store.add_documents(chunks)
+    for i in range(0, len(chunks), _BATCH_SIZE):
+        vector_store.add_documents(chunks[i : i + _BATCH_SIZE])
     return len(chunks)
 
 
 if __name__ == "__main__":
+    import sys
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        sys.stdout.reconfigure(encoding="utf-8")
+
     from src.config import get_settings
     from src.rag.vector_store import build_vector_store
     from src.rag.embeddings import get_embeddings
