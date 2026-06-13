@@ -22,8 +22,6 @@ def test_config_loads_from_env():
 
 def test_config_raises_on_missing_key():
     with patch.dict(os.environ, {}, clear=True):
-        from importlib import reload
-        import src.config as cfg
+        from src.config import Settings
         with pytest.raises(Exception):
-            reload(cfg)
-            cfg.get_settings()
+            Settings(_env_file=None)
