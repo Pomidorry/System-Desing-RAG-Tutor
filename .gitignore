@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.claude
+docs
+.chroma
+skills-lock.json
+data/knowledge_base/*.pdf
