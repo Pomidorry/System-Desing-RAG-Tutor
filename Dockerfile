@@ -1,0 +1,26 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download embedding model so first startup is fast
+RUN python -W ignore -c "\
+from langchain_huggingface import HuggingFaceEmbeddings; \
+HuggingFaceEmbeddings(model_name='BAAI/bge-small-en-v1.5', \
+model_kwargs={'device': 'cpu'}, encode_kwargs={'normalize_embeddings': True})"
+
+COPY src/ src/
+COPY data/ data/
+
+EXPOSE 8501
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

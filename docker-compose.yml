@@ -1,0 +1,13 @@
+services:
+  tutor:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - chroma_data:/app/.chroma
+      - ./data/knowledge_base:/app/data/knowledge_base
+
+volumes:
+  chroma_data:
