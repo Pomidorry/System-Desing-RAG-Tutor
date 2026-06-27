@@ -480,7 +480,7 @@
           ${mark ? `<span class="mark">${mark}</span>` : ''}
         </div>`;
       }).join('');
-      const yourAns = r.your_answer || '—';
+      const yourAns = r.your_answer ? escapeHtml(r.your_answer) : '—';
       return `<div class="q-card" style="border-left-color:${r.is_correct ? 'var(--ok)' : 'var(--bad)'}">
         <div class="q-num">Question ${i + 1} · ${r.is_correct ? 'CORRECT' : 'INCORRECT'} (you: ${yourAns})</div>
         <div class="q-text">${escapeHtml(r.question)}</div>

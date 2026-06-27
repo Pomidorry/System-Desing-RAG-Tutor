@@ -40,7 +40,9 @@ def index():
 
 @app.route("/quiz/start", methods=["POST"])
 def quiz_start():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "invalid request body"}), 400
     topic = (data.get("topic") or "").strip()
     if not topic:
         return jsonify({"error": "empty topic"}), 400
@@ -60,9 +62,13 @@ def quiz_start():
 
 @app.route("/quiz/submit", methods=["POST"])
 def quiz_submit():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "invalid request body"}), 400
     quiz_id = data.get("quiz_id")
     answers = data.get("answers") or {}
+    if not isinstance(answers, dict):
+        return jsonify({"error": "invalid answers"}), 400
     quiz = _quizzes.get(quiz_id)
     if quiz is None:
         return jsonify({"error": "quiz not found — please restart"}), 404
