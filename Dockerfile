@@ -18,7 +18,8 @@ HuggingFaceEmbeddings(model_name='BAAI/bge-small-en-v1.5', \
 model_kwargs={'device': 'cpu'}, encode_kwargs={'normalize_embeddings': True})"
 
 COPY src/ src/
-COPY data/ data/
+# Knowledge base is NOT baked into the image — users mount their own at runtime
+RUN mkdir -p data/knowledge_base
 
 EXPOSE 8501
 

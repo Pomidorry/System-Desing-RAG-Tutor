@@ -10,7 +10,7 @@ An interactive tutoring chatbot for system design, powered by a RAG pipeline bac
 | Embeddings | `BAAI/bge-small-en-v1.5` (local, CPU) |
 | Vector DB | ChromaDB (persistent) |
 | RAG | LangChain `ConversationalRetrievalChain` + MMR |
-| UI | Streamlit |
+| UI | Flask (topic-based system design quiz) |
 
 ## Quick Start
 
@@ -27,19 +27,86 @@ cp .env.example .env
 # 3. Ingest documents into the vector store (run once)
 python -m src.ingestion.loader
 
-# 4. Launch UI
-streamlit run src/ui/app.py
+# 4. Launch UI (Flask dev server)
+python src/ui/app.py
 ```
 
 Open http://localhost:8501
 
-### Docker
+### Docker (run with your own books and API key)
+
+The Docker image ships **without** any knowledge-base documents — you supply your
+own books and your own DeepSeek API key. Follow these steps:
+
+**1. Install Docker.** Get [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows/macOS) or Docker Engine + the Compose plugin (Linux). Verify:
 
 ```bash
-docker-compose up --build
+docker --version
+docker compose version
 ```
 
-On first run, ingestion happens automatically before the UI starts. The vector store is persisted in a Docker volume — subsequent runs skip re-ingestion.
+**2. Get the project** and open a terminal in its root folder:
+
+```bash
+git clone <repo-url>
+cd System-Desing-RAG-Tutor
+```
+
+**3. Add your DeepSeek API key.** Copy the example env file and edit it:
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set your key (get one at https://platform.deepseek.com):
+
+```
+DEEPSEEK_API_KEY=sk-your-real-key-here
+```
+
+The other variables already have working defaults — leave them as-is.
+
+**4. Add your own books.** Drop your documents into `data/knowledge_base/`.
+Supported formats: `.pdf`, `.md`, `.txt`.
+
+```bash
+# example
+cp ~/Downloads/my-system-design-book.pdf data/knowledge_base/
+```
+
+This folder is mounted into the container at runtime, so your files never get
+baked into the image.
+
+**5. Build and start:**
+
+```bash
+docker compose up --build
+```
+
+On the **first** run the container automatically ingests everything in
+`data/knowledge_base/` into the vector store before the web server starts
+(this can take a few minutes depending on book size). The index is saved to a
+named Docker volume (`chroma_data`), so later runs start instantly and skip
+re-ingestion.
+
+**6. Open the app:** http://localhost:8501
+
+**7. Stop it:** press `Ctrl+C`, or from another terminal:
+
+```bash
+docker compose down
+```
+
+#### Updating your books later
+
+Ingestion is skipped whenever the vector store already contains data. After you
+add or remove books, reset the index so it gets rebuilt on the next start:
+
+```bash
+docker compose down -v   # -v removes the chroma_data volume (the index)
+docker compose up        # re-ingests your current books, then starts the app
+```
 
 ## Environment Variables
 
@@ -59,7 +126,8 @@ Drop `.md`, `.txt`, or `.pdf` files into `data/knowledge_base/` and re-run inges
 python -m src.ingestion.loader
 ```
 
-The default setup includes 5 system design books (Kleppmann, Alex Xu, Petrov, Burns).
+No documents are bundled with the project — you provide your own knowledge base.
+For Docker, see step 4 above and the "Updating your books later" note.
 
 ## Tests
 

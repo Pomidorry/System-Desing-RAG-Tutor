@@ -17,4 +17,6 @@ except Exception:
     python -W ignore -m src.ingestion.loader
 }
 
-exec python src/ui/app.py
+# 1 worker is mandatory: quizzes and the RAG pipeline live in process memory.
+# Threads allow concurrent requests sharing that state; long timeout covers slow LLM calls.
+exec gunicorn -w 1 --threads 4 --timeout 120 -b 0.0.0.0:8501 src.ui.app:app
