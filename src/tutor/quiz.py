@@ -38,15 +38,26 @@ class Quiz(BaseModel):
     questions: list[Question]
 
 
-_GENERATION_PROMPT = """You are an expert system design examiner. Using the reference context \
-below, write exactly {n} multiple-choice quiz questions about "{topic}".
+_GENERATION_PROMPT = """You are a senior engineer running a system design interview. Write \
+exactly {n} multiple-choice questions about "{topic}" of the kind that actually come up in a \
+real system design interview.
 
-Rules:
-- Each question has exactly 4 options keyed "A", "B", "C", "D".
-- Exactly one option is correct.
+Style — questions MUST be:
+- Practical and concept-focused: trade-offs, "when would you use X vs Y", failure modes, \
+scaling decisions, real-world scenarios ("Your service needs ... which approach fits best?").
+- The kind a candidate is expected to reason about, not memorize.
+
+Hard bans — NEVER write trivia questions. Do NOT reference or ask about:
+- specific papers, authors, researchers, book titles, companies, or publication years \
+(e.g. "In the 1987 paper by Demers et al. ..." is forbidden);
+- who invented something, what something is named after, or any historical/biographical fact.
+Use the reference context only to ground the technical concepts — not as a source of citations.
+
+Other rules:
+- Each question has exactly 4 options keyed "A", "B", "C", "D"; exactly one is correct.
 - Vary difficulty and cover different facets of the topic. Do not repeat questions.
-- Keep each option plausible; avoid obvious throwaway answers.
-- The "explanation" briefly says why the correct option is right.
+- Make all 4 options plausible and tempting; avoid obvious throwaway answers.
+- The "explanation" briefly says why the correct option is right (still no citations).
 
 Reference context:
 {context}
