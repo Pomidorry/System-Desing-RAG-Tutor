@@ -1,6 +1,12 @@
 import sys
+import warnings
+import logging
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+warnings.filterwarnings("ignore")
+logging.getLogger("chromadb").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 
 import streamlit as st
 from src.config import get_settings
@@ -16,7 +22,7 @@ st.title("🏗️ System Design Tutor")
 st.caption("Ask me anything about distributed systems, databases, caching, and more.")
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Loading knowledge base...")
 def _load_chain():
     s = get_settings()
     vs = build_vector_store(get_embeddings(), s.chroma_persist_dir)
