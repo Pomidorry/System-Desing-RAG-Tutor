@@ -14,22 +14,23 @@ from src.rag.embeddings import get_embeddings
 from src.rag.vector_store import build_vector_store
 from src.rag.retriever import build_retriever
 from src.llm.deepseek_client import build_llm
-from src.tutor.chain import build_chain, ask as chain_ask
+from src.tutor.quiz import generate_quiz, grade, Quiz
 
 app = Flask(__name__, template_folder="templates")
 
-_chain = None
+_llm = None
+_retriever = None
+_quizzes: dict[str, Quiz] = {}
 
 
-def get_chain():
-    global _chain
-    if _chain is None:
+def get_rag():
+    global _llm, _retriever
+    if _retriever is None:
         s = get_settings()
         vs = build_vector_store(get_embeddings(), s.chroma_persist_dir)
-        retriever = build_retriever(vs)
-        llm = build_llm()
-        _chain = build_chain(llm=llm, retriever=retriever)
-    return _chain
+        _retriever = build_retriever(vs)
+        _llm = build_llm()
+    return _llm, _retriever
 
 
 @app.route("/")
@@ -37,17 +38,38 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/chat", methods=["POST"])
-def chat():
+@app.route("/quiz/start", methods=["POST"])
+def quiz_start():
     data = request.get_json()
-    question = data.get("question", "").strip()
-    history = [tuple(pair) for pair in data.get("history", [])]
-    if not question:
-        return jsonify({"error": "empty question"}), 400
-    result = chain_ask(get_chain(), question, history)
-    return jsonify({"answer": result["answer"], "sources": result["sources"]})
+    topic = (data.get("topic") or "").strip()
+    if not topic:
+        return jsonify({"error": "empty topic"}), 400
+    try:
+        llm, retriever = get_rag()
+        quiz = generate_quiz(llm, retriever, topic)
+    except Exception as exc:
+        return jsonify({"error": f"could not generate quiz: {exc}"}), 500
+
+    _quizzes[quiz.id] = quiz
+    questions = [
+        {"id": idx, "question": q.question, "options": q.options}
+        for idx, q in enumerate(quiz.questions)
+    ]
+    return jsonify({"quiz_id": quiz.id, "topic": quiz.topic, "questions": questions})
+
+
+@app.route("/quiz/submit", methods=["POST"])
+def quiz_submit():
+    data = request.get_json()
+    quiz_id = data.get("quiz_id")
+    answers = data.get("answers") or {}
+    quiz = _quizzes.get(quiz_id)
+    if quiz is None:
+        return jsonify({"error": "quiz not found — please restart"}), 404
+    result = grade(quiz, {str(k): v for k, v in answers.items()})
+    return jsonify(result)
 
 
 if __name__ == "__main__":
-    get_chain()
+    get_rag()
     app.run(host="0.0.0.0", port=8501, debug=False)

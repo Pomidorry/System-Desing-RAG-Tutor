@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>System Design Tutor</title>
+<title>System Design Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -15,8 +15,8 @@
     --accent-dim:#7a5e1f;
     --text:      #e8e6df;
     --muted:     #555566;
-    --user-bg:   #141420;
-    --bot-bg:    #0f0f1a;
+    --ok:        #4caf72;
+    --bad:       #d05858;
     --radius:    2px;
   }
 
@@ -59,170 +59,80 @@
     letter-spacing: -0.3px;
   }
   .logo span { color: var(--accent); }
-  .tagline {
+  .meta {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.5px;
+    margin-left: auto;
   }
 
-  /* ── MESSAGES ── */
-  #messages {
+  /* ── SCROLL AREA ── */
+  #stage {
     flex: 1;
     overflow-y: auto;
-    padding: 24px 0;
     scroll-behavior: smooth;
   }
-  #messages::-webkit-scrollbar { width: 4px; }
-  #messages::-webkit-scrollbar-track { background: transparent; }
-  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  #stage::-webkit-scrollbar { width: 4px; }
+  #stage::-webkit-scrollbar-track { background: transparent; }
+  #stage::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .message {
-    padding: 0 32px;
-    margin-bottom: 2px;
-    animation: fadeUp 0.2s ease both;
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
   }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeUp 0.25s ease both; }
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .message-inner {
-    max-width: 760px;
-    margin: 0 auto;
-  }
-
-  .message.user .bubble {
-    background: var(--user-bg);
-    border: 1px solid var(--border);
-    border-left: 2px solid var(--accent);
-    padding: 14px 18px;
-    border-radius: var(--radius);
-    margin-left: auto;
-    max-width: 85%;
-    width: fit-content;
-  }
-
-  .message.bot .bubble {
-    background: transparent;
-    padding: 14px 0;
-    line-height: 1.75;
-  }
-
-  .role-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    color: var(--muted);
-  }
-  .message.user .role-label { text-align: right; }
-  .message.bot  .role-label { color: var(--accent-dim); }
-
-  .bubble p { margin-bottom: 10px; }
-  .bubble p:last-child { margin-bottom: 0; }
-  .bubble code {
+  /* ── START SCREEN ── */
+  #start-screen .wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 64px; }
+  .glyph { font-size: 40px; opacity: 0.25; }
+  .lead {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    background: #1a1a28;
-    border: 1px solid var(--border);
-    padding: 1px 6px;
-    border-radius: 2px;
-    color: var(--accent);
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-align: center;
   }
-  .bubble pre {
-    background: #0d0d18;
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  @media (max-width: 560px) { .topic-grid { grid-template-columns: 1fr; } }
+  .topic-card {
     border: 1px solid var(--border);
     border-left: 2px solid var(--accent-dim);
-    padding: 14px 16px;
     border-radius: var(--radius);
-    overflow-x: auto;
-    margin: 12px 0;
-  }
-  .bubble pre code {
-    background: none;
-    border: none;
-    padding: 0;
-    color: #c8c0a8;
-  }
-
-  /* sources */
-  .sources {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .source-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    padding: 3px 8px;
-    border-radius: 2px;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 280px;
-  }
-
-  /* typing indicator */
-  .typing .bubble {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 16px 0;
-  }
-  .dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--accent-dim);
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes pulse {
-    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-    40%           { opacity: 1;   transform: scale(1); }
-  }
-
-  /* ── INPUT ── */
-  #input-area {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border);
-    padding: 16px 32px 20px;
     background: var(--surface);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
   }
-  .input-wrap {
-    max-width: 760px;
-    margin: 0 auto;
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  textarea {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+  .topic-card:hover { border-color: var(--accent); border-left-color: var(--accent); background: #141420; }
+  .topic-card:active { transform: translateY(1px); }
+  .topic-card .t-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    padding: 12px 14px;
-    resize: none;
-    outline: none;
-    min-height: 48px;
-    max-height: 160px;
-    line-height: 1.5;
-    transition: border-color 0.15s;
-    overflow-y: auto;
+    margin-bottom: 4px;
   }
-  textarea::placeholder { color: var(--muted); }
-  textarea:focus { border-color: var(--accent-dim); }
+  .topic-card .t-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
 
-  button#send {
+  .btn {
     background: var(--accent);
     border: none;
     border-radius: var(--radius);
@@ -231,199 +141,370 @@
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.5px;
-    padding: 0 18px;
-    height: 48px;
+    padding: 0 22px;
+    height: 46px;
     cursor: pointer;
-    flex-shrink: 0;
     transition: opacity 0.15s;
+    white-space: nowrap;
   }
-  button#send:hover   { opacity: 0.85; }
-  button#send:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.ghost:hover { border-color: var(--accent-dim); opacity: 1; }
 
-  .hint {
+  /* ── LOADING ── */
+  #loading-screen .wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 120px; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-dim); animation: pulse 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40%           { opacity: 1;   transform: scale(1); }
+  }
+
+  /* ── QUESTIONS ── */
+  .q-card {
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent-dim);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    background: var(--surface);
+  }
+  .q-num {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 10px;
-    letter-spacing: 0.3px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin-bottom: 8px;
   }
-
-  /* empty state */
-  #empty {
+  .q-text { font-weight: 500; line-height: 1.55; margin-bottom: 14px; }
+  .opt {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+    align-items: flex-start;
     gap: 10px;
-    color: var(--muted);
-    pointer-events: none;
-    user-select: none;
-  }
-  #empty .glyph {
-    font-size: 36px;
-    opacity: 0.25;
-  }
-  #empty p {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-  }
-  .suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 6px;
-    pointer-events: all;
-  }
-  .suggestion {
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 7px 14px;
-    font-size: 13px;
-    color: var(--muted);
+    margin-bottom: 8px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
   }
-  .suggestion:hover { border-color: var(--accent-dim); color: var(--text); }
+  .opt:last-child { margin-bottom: 0; }
+  .opt:hover { border-color: var(--accent-dim); }
+  .opt input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+  .opt.selected { border-color: var(--accent); background: #141420; }
+  .opt .key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* result states (review) */
+  .opt.correct { border-color: var(--ok); background: rgba(76,175,114,0.08); }
+  .opt.wrong   { border-color: var(--bad); background: rgba(208,88,88,0.08); }
+  .opt .mark { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; flex-shrink: 0; }
+  .opt.correct .mark { color: var(--ok); }
+  .opt.wrong   .mark { color: var(--bad); }
+  .explain {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-left: 2px solid var(--accent-dim);
+    background: #0d0d18;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c8c0a8;
+    border-radius: var(--radius);
+  }
+  .explain b { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.5px; }
+
+  /* ── SCORE ── */
+  .score {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .score .big {
+    font-family: 'Playfair Display', serif;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .score .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ── FOOTER BAR ── */
+  #bar {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 14px 32px;
+    background: var(--surface);
+    display: none;
+  }
+  #bar.active { display: block; }
+  .bar-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .bar-inner .spacer { flex: 1; }
+
+  .error-box {
+    border: 1px solid var(--bad);
+    background: rgba(208,88,88,0.08);
+    color: var(--bad);
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    max-width: 520px;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">System Design <span>Tutor</span></div>
+  <div class="logo">System Design <span>Quiz</span></div>
+  <div class="meta" id="meta"></div>
 </header>
 
-<div id="messages">
-  <div id="empty">
-    <div class="glyph">⬡</div>
-    <p>ask a system design question</p>
-    <div class="suggestions">
-      <div class="suggestion" onclick="fillInput(this)">What is a load balancer?</div>
-      <div class="suggestion" onclick="fillInput(this)">Explain CAP theorem</div>
-      <div class="suggestion" onclick="fillInput(this)">How does consistent hashing work?</div>
-      <div class="suggestion" onclick="fillInput(this)">Compare SQL vs NoSQL</div>
+<div id="stage">
+
+  <!-- START -->
+  <section id="start-screen" class="screen active">
+    <div class="wrap">
+      <div class="glyph">⬡</div>
+      <div class="lead">choose a topic — get a 10-question quiz</div>
+      <div class="topic-grid" id="topic-grid"></div>
+      <div id="start-error"></div>
     </div>
-  </div>
+  </section>
+
+  <!-- LOADING -->
+  <section id="loading-screen" class="screen">
+    <div class="wrap">
+      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="lead" id="loading-text">generating your quiz…</div>
+    </div>
+  </section>
+
+  <!-- QUESTIONS -->
+  <section id="quiz-screen" class="screen">
+    <div class="wrap"><div id="questions"></div></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results-screen" class="screen">
+    <div class="wrap">
+      <div class="score">
+        <div class="big" id="score-big">0/10</div>
+        <div class="label" id="score-label"></div>
+      </div>
+      <div id="review"></div>
+    </div>
+  </section>
+
 </div>
 
-<div id="input-area">
-  <div class="input-wrap">
-    <textarea id="q" rows="1" placeholder="Ask about distributed systems, databases, caching…" autofocus></textarea>
-    <button id="send" onclick="sendMessage()">SEND</button>
+<!-- FOOTER BAR -->
+<div id="bar">
+  <div class="bar-inner">
+    <div class="progress" id="progress"></div>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="restart-btn" onclick="restart()" style="display:none">RESTART</button>
+    <button class="btn" id="submit-btn" onclick="submitQuiz()" disabled>SUBMIT</button>
   </div>
-  <div class="hint">Enter to send · Shift+Enter for new line</div>
 </div>
 
 <script>
-  const messagesEl = document.getElementById('messages');
-  const emptyEl    = document.getElementById('empty');
-  const textarea   = document.getElementById('q');
-  const sendBtn    = document.getElementById('send');
-  let history = [];
+  const TOPICS = [
+    { name: 'Caching',                 desc: 'Cache strategies, eviction, CDNs, read/write-through' },
+    { name: 'Load Balancing',          desc: 'L4/L7, algorithms, health checks, failover' },
+    { name: 'Database Replication',    desc: 'Leader/follower, sync vs async, replication lag' },
+    { name: 'Sharding & Partitioning', desc: 'Range vs hash partitioning, rebalancing, hot spots' },
+    { name: 'CAP Theorem & Consistency', desc: 'Consistency models, trade-offs, eventual consistency' },
+    { name: 'Consistent Hashing',      desc: 'Hash rings, virtual nodes, node add/remove' },
+    { name: 'Message Queues & Kafka',  desc: 'Pub/sub, partitions, delivery guarantees, backpressure' },
+    { name: 'Rate Limiting',           desc: 'Token bucket, leaky bucket, sliding window' },
+    { name: 'Consensus & Leader Election', desc: 'Raft, Paxos, quorums, split brain' },
+    { name: 'SQL vs NoSQL',            desc: 'Data models, ACID vs BASE, when to use each' },
+  ];
 
-  function fillInput(el) {
-    textarea.value = el.textContent;
-    textarea.focus();
-    autoResize();
-  }
+  let quizId = null;
+  let questions = [];
+  let answers = {};
 
-  textarea.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-  textarea.addEventListener('input', autoResize);
+  const $ = id => document.getElementById(id);
 
-  function autoResize() {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px';
-  }
-
-  function addMessage(role, content, sources) {
-    if (emptyEl) emptyEl.remove();
-
-    const msg = document.createElement('div');
-    msg.className = `message ${role}`;
-
-    const label = role === 'user' ? 'YOU' : 'TUTOR';
-    let inner = `<div class="message-inner">
-      <div class="role-label">${label}</div>
-      <div class="bubble">${content}</div>
-    </div>`;
-    msg.innerHTML = inner;
-
-    if (sources && sources.length) {
-      const srcHtml = sources.map(s => {
-        const name = s.split(/[\\/]/).pop();
-        return `<span class="source-tag" title="${s}">${name}</span>`;
-      }).join('');
-      msg.querySelector('.bubble').insertAdjacentHTML(
-        'beforeend', `<div class="sources">${srcHtml}</div>`
-      );
-    }
-
-    messagesEl.appendChild(msg);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    return msg;
-  }
-
-  function addTyping() {
-    const msg = document.createElement('div');
-    msg.className = 'message bot typing';
-    msg.innerHTML = `<div class="message-inner">
-      <div class="role-label">TUTOR</div>
-      <div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-    </div>`;
-    messagesEl.appendChild(msg);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    return msg;
+  function show(screen) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(screen).classList.add('active');
+    $('stage').scrollTop = 0;
   }
 
   function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function formatAnswer(text) {
-    // code blocks
-    text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
-      `<pre><code>${escapeHtml(code.trim())}</code></pre>`);
-    // inline code
-    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // bold
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // paragraphs
-    return text.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  function renderTopics() {
+    $('topic-grid').innerHTML = TOPICS.map((t, i) => `
+      <div class="topic-card" onclick="startQuiz(${i})">
+        <div class="t-name">${escapeHtml(t.name)}</div>
+        <div class="t-desc">${escapeHtml(t.desc)}</div>
+      </div>`).join('');
   }
+  renderTopics();
 
-  async function sendMessage() {
-    const q = textarea.value.trim();
-    if (!q || sendBtn.disabled) return;
-
-    textarea.value = '';
-    autoResize();
-    sendBtn.disabled = true;
-
-    addMessage('user', `<p>${escapeHtml(q)}</p>`, null);
-    const typing = addTyping();
+  async function startQuiz(topicIndex) {
+    const topic = TOPICS[topicIndex].name;
+    $('start-error').innerHTML = '';
+    $('loading-text').textContent = `generating a quiz on “${topic}”…`;
+    show('loading-screen');
 
     try {
-      const res = await fetch('/chat', {
+      const res = await fetch('/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, history })
+        body: JSON.stringify({ topic })
       });
       const data = await res.json();
-      typing.remove();
-      addMessage('bot', formatAnswer(data.answer), data.sources);
-      history.push([q, data.answer]);
-    } catch (err) {
-      typing.remove();
-      addMessage('bot', '<p>Error — could not reach the server.</p>', null);
-    }
+      if (!res.ok) throw new Error(data.error || 'failed to generate quiz');
 
-    sendBtn.disabled = false;
-    textarea.focus();
+      quizId = data.quiz_id;
+      questions = data.questions;
+      answers = {};
+      renderQuestions(data.topic);
+    } catch (err) {
+      show('start-screen');
+      $('start-error').innerHTML = `<div class="error-box">${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function renderQuestions(topic) {
+    $('meta').textContent = topic ? `TOPIC: ${topic.toUpperCase()}` : '';
+    const html = questions.map(q => {
+      const opts = Object.keys(q.options).map(k => `
+        <label class="opt" data-q="${q.id}" data-opt="${k}" onclick="selectOpt(${q.id}, '${k}')">
+          <input type="radio" name="q${q.id}" value="${k}">
+          <span class="key">${k}</span>
+          <span>${escapeHtml(q.options[k])}</span>
+        </label>`).join('');
+      return `<div class="q-card">
+        <div class="q-num">Question ${q.id + 1} / ${questions.length}</div>
+        <div class="q-text">${escapeHtml(q.question)}</div>
+        ${opts}
+      </div>`;
+    }).join('');
+    $('questions').innerHTML = html;
+
+    $('submit-btn').style.display = '';
+    $('submit-btn').disabled = true;
+    $('restart-btn').style.display = 'none';
+    $('bar').classList.add('active');
+    updateProgress();
+    show('quiz-screen');
+  }
+
+  function selectOpt(qid, key) {
+    answers[qid] = key;
+    document.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(el => {
+      el.classList.toggle('selected', el.dataset.opt === key);
+    });
+    const input = document.querySelector(`input[name="q${qid}"][value="${key}"]`);
+    if (input) input.checked = true;
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const n = Object.keys(answers).length;
+    $('progress').textContent = `${n} / ${questions.length} answered`;
+    $('submit-btn').disabled = n < questions.length;
+  }
+
+  async function submitQuiz() {
+    $('submit-btn').disabled = true;
+    try {
+      const res = await fetch('/quiz/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quiz_id: quizId, answers })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'failed to submit');
+      renderResults(data);
+    } catch (err) {
+      $('submit-btn').disabled = false;
+      alert(err.message);
+    }
+  }
+
+  function renderResults(data) {
+    $('score-big').textContent = `${data.score}/${data.total}`;
+    const pct = Math.round((data.score / data.total) * 100);
+    let verdict = 'keep studying';
+    if (pct >= 90) verdict = 'excellent';
+    else if (pct >= 70) verdict = 'solid';
+    else if (pct >= 50) verdict = 'getting there';
+    $('score-label').textContent = `${pct}% · ${verdict}`;
+
+    const html = data.results.map((r, i) => {
+      const opts = Object.keys(r.options).map(k => {
+        let cls = 'opt';
+        let mark = '';
+        if (k === r.correct_answer) { cls += ' correct'; mark = '✓ correct'; }
+        else if (k === r.your_answer) { cls += ' wrong'; mark = '✗ your answer'; }
+        return `<div class="${cls}">
+          <span class="key">${k}</span>
+          <span>${escapeHtml(r.options[k])}</span>
+          ${mark ? `<span class="mark">${mark}</span>` : ''}
+        </div>`;
+      }).join('');
+      const yourAns = r.your_answer || '—';
+      return `<div class="q-card" style="border-left-color:${r.is_correct ? 'var(--ok)' : 'var(--bad)'}">
+        <div class="q-num">Question ${i + 1} · ${r.is_correct ? 'CORRECT' : 'INCORRECT'} (you: ${yourAns})</div>
+        <div class="q-text">${escapeHtml(r.question)}</div>
+        ${opts}
+        <div class="explain"><b>WHY</b><br>${escapeHtml(r.explanation)}</div>
+      </div>`;
+    }).join('');
+    $('review').innerHTML = html;
+
+    $('submit-btn').style.display = 'none';
+    $('restart-btn').style.display = '';
+    $('progress').textContent = `scored ${data.score} of ${data.total}`;
+    $('bar').classList.add('active');
+    show('results-screen');
+  }
+
+  function restart() {
+    quizId = null;
+    questions = [];
+    answers = {};
+    $('meta').textContent = '';
+    $('bar').classList.remove('active');
+    $('start-error').innerHTML = '';
+    show('start-screen');
   }
 </script>
 </body>
