@@ -17,7 +17,4 @@ except Exception:
     python -W ignore -m src.ingestion.loader
 }
 
-exec streamlit run src/ui/app.py \
-    --server.port=8501 \
-    --server.address=0.0.0.0 \
-    --server.headless=true
+exec python src/ui/app.py
